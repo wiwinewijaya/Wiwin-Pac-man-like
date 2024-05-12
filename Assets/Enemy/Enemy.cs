@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering;
 
 public class Enemy : MonoBehaviour
 {
@@ -20,9 +21,12 @@ public class Enemy : MonoBehaviour
 
     [HideInInspector]
     public NavMeshAgent navMeshAgent;
+    [HideInInspector]
+    public Animator animator;
 
     private void Awake()
     {
+        animator = GetComponent<Animator>();
         currState = patrolState;
         currState.EnterState(this);
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -61,5 +65,22 @@ public class Enemy : MonoBehaviour
     private void StopRetreating()
     {
         SwitchState(patrolState);
+    }
+
+    public void Dead()
+    {
+
+        Destroy(gameObject);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (currState != retreatingState)
+        {
+            if(collision.gameObject.CompareTag("Player"))
+            {
+                collision.gameObject.GetComponent<Player>().Dead();
+            }
+        }
     }
 }

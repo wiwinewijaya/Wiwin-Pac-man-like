@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -12,6 +13,7 @@ public class Player : MonoBehaviour
     private Renderer body;
     private Rigidbody _rigidBody;
     private Coroutine _powerUpCoroutine;
+    private bool _isPowerUpActive;
 
     [SerializeField]
     private float _speed;
@@ -19,6 +21,12 @@ public class Player : MonoBehaviour
     private Transform _camera;
     [SerializeField]
     private float powerUpDuration;
+    [SerializeField]
+    private Transform _respawnPoint;
+    [SerializeField]
+    private int _health;
+    [SerializeField]
+    private TMP_Text healthText;
 
     public Action OnPowerUpStart;
     public Action OnPowerUpStop;
@@ -32,6 +40,7 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
+        UpdateUI();
         // Locking Cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -85,6 +94,7 @@ public class Player : MonoBehaviour
 
     private IEnumerator StartPowerUp()
     {
+        _isPowerUpActive = true;
         Debug.Log("Start Power Up");
         if (OnPowerUpStart != null)
         {
@@ -92,9 +102,42 @@ public class Player : MonoBehaviour
         }
         yield return new WaitForSeconds(powerUpDuration);
         Debug.Log("Stop Power Up");
+        _isPowerUpActive = false;
         if (OnPowerUpStop != null)
         {
             OnPowerUpStop();
         }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (_isPowerUpActive)
+        {
+            if (collision.gameObject.CompareTag("Enemy"))
+            {
+                collision.gameObject.GetComponent<Enemy>().Dead();
+            }
+        }
+    }
+
+    private void UpdateUI()
+    {
+        healthText.text = "Health: " + _health;
+    }
+
+    public void Dead()
+    {
+        _health -= 1;
+        if ( _health > 0 )
+        {
+            transform.position = _respawnPoint.position;
+        }
+        else
+        {
+            _health = 0;
+            Debug.Log("Lose");
+        }
+
+        UpdateUI();
     }
 }
